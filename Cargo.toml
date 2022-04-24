@@ -1,0 +1,15 @@
+[package]
+name = "short"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+serde = {version = "1.0.136", features = ["derive"]}
+serde_json = "1.0.79"
+tokio = { version = "1", features = ["full"] }
+warp = "0.3.2"
+dotenv = "0.15.0"
+http = "0.2"
+dashmap = {version = "5.2.0", features = ["serde"]}
+bytes = "1.1.0"
