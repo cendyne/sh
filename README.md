@@ -50,3 +50,10 @@ curl --request PUT \
 The response body will be the path, so a response with `/V` will mean that the host will redirect to the value `https://github.com/cendyne/sh` when visited at `/V`. Thus https://cdyn.dev/V will redirect to `https://github.com/cendyne/sh`
 
 ![](qr.png)
+
+This project was originally made to enable QR small QR codes.
+_Unfortunately, I cannot feasibly get a domain short enough for micro qr codes, and most device camera apps do not natively recognize micro qr codes._
+
+```
+echo -n "https://cdyn.dev/V" | qrencode -t png -o qr.png
+```
