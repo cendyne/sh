@@ -1,4 +1,17 @@
+use once_cell::sync::OnceCell;
+
 use crate::settings::*;
+
+const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+static CHOSEN_ALPHABET: OnceCell<String> = OnceCell::new();
+
+pub fn chosen_alphabet() -> &'static str {
+    CHOSEN_ALPHABET.get_or_init(|| {
+        std::env::var("ALPHABET")
+            .ok()
+            .unwrap_or_else(|| ALPHABET.to_string())
+    })
+}
 
 pub fn increment_string(alphabet: &str, symbols: &str) -> String {
     let mut result: Vec<char> = Vec::with_capacity(symbols.len() + 1);

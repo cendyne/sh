@@ -1,5 +1,4 @@
 use http::{Response, StatusCode};
-use once_cell::sync::OnceCell;
 
 use std::convert::Infallible;
 use std::env;
@@ -9,21 +8,12 @@ use warp::{Filter, Rejection, Reply};
 mod auth;
 mod id;
 mod settings;
+mod plaintext;
 
 use crate::auth::*;
 use crate::id::*;
 use crate::settings::*;
-
-const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-static CHOSEN_ALPHABET: OnceCell<String> = OnceCell::new();
-
-fn chosen_alphabet() -> &'static str {
-    CHOSEN_ALPHABET.get_or_init(|| {
-        env::var("ALPHABET")
-            .ok()
-            .unwrap_or_else(|| ALPHABET.to_string())
-    })
-}
+use crate::plaintext::*;
 
 async fn redirect_handler(name: String) -> http::Result<impl Reply> {
     let settings = load_json_settings().await;
@@ -79,17 +69,6 @@ async fn push_custom_handler(path: String, destination: String) -> Result<impl R
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body("Could not save".to_string()))
     }
-}
-
-#[derive(Debug)]
-struct CouldNotParsePlainText;
-
-impl warp::reject::Reject for CouldNotParsePlainText {}
-
-pub fn plaintext() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
-    warp::filters::body::bytes().and_then(|buf: bytes::Bytes| async move {
-        String::from_utf8(buf.to_vec()).map_err(|_| warp::reject::custom(CouldNotParsePlainText))
-    })
 }
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
