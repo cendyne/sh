@@ -4,7 +4,7 @@ use warp::{Filter, Rejection};
 static CORRECT_BEARER_TOKEN_HASH: OnceCell<[u8; blake3::OUT_LEN]> = OnceCell::new();
 
 fn load_correct_bearer_token_hash() -> Result<[u8; blake3::OUT_LEN], String> {
-    let input = std::env::var("TOKEN").map_err(|e| format!("{}", e))?;
+    let input = std::env::var("TOKEN").map_err(|e| format!("TOKEN: {}", e))?;
     let correct_bearer = format!("Bearer {}", input);
     let mut hasher = blake3::Hasher::new();
     hasher.update(correct_bearer.as_bytes());

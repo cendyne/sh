@@ -7,13 +7,13 @@ use warp::{Filter, Rejection, Reply};
 
 mod auth;
 mod id;
-mod settings;
 mod plaintext;
+mod settings;
 
 use crate::auth::*;
 use crate::id::*;
-use crate::settings::*;
 use crate::plaintext::*;
+use crate::settings::*;
 
 async fn redirect_handler(name: String) -> http::Result<impl Reply> {
     let settings = load_json_settings().await;
@@ -38,22 +38,22 @@ async fn empty_redirect_handler() -> http::Result<impl Reply> {
 async fn push_handler(destination: String) -> Result<impl Reply, Infallible> {
     let settings = load_json_settings().await;
     let alphabet = chosen_alphabet();
-    let symbol = next_symbol(&settings, alphabet);
-    if let Some(key) = symbol {
-        add_redirect(&settings, &key, &destination);
-        if save_data(&settings, data_source()).await.is_ok() {
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .body(format!("/{}", key)))
-        } else {
-            Ok(Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("Could not save".to_string()))
+    match next_symbol_by_hash(&settings, alphabet) {
+        Ok(key) => {
+            add_redirect(&settings, &key, &destination);
+            if save_data(&settings, data_source()).await.is_ok() {
+                Ok(Response::builder()
+                    .status(StatusCode::OK)
+                    .body(format!("/{}", key)))
+            } else {
+                Ok(Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body("Could not save".to_string()))
+            }
         }
-    } else {
-        Ok(Response::builder()
+        Err(err) => Ok(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body("Server is poisoned".to_string()))
+            .body(err)),
     }
 }
 
@@ -69,6 +69,10 @@ async fn push_custom_handler(path: String, destination: String) -> Result<impl R
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body("Could not save".to_string()))
     }
+}
+
+async fn empty_push_custom_handler(destination: String) -> Result<impl Reply, Infallible> {
+    push_custom_handler("".to_string(), destination).await
 }
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
@@ -97,7 +101,7 @@ async fn main() {
     match dotenv::dotenv() {
         Ok(_) => {}
         Err(e) => {
-            format!("{}", e);
+            format!("DOT ENV: {}", e);
         }
     }
 
@@ -123,8 +127,18 @@ async fn main() {
         .and(check_auth())
         .and(plaintext())
         .and_then(push_custom_handler);
+    let push_custom_empty = warp::put()
+        .and(warp::path!("custom"))
+        .and(warp::body::content_length_limit(4096))
+        .and(check_auth())
+        .and(plaintext())
+        .and_then(empty_push_custom_handler);
 
-    let filters = redirect.or(push).or(push_custom).recover(handle_rejection);
+    let filters = redirect
+        .or(push)
+        .or(push_custom)
+        .or(push_custom_empty)
+        .recover(handle_rejection);
 
     println!("Listening on port {}", port);
     warp::serve(filters).run(([0, 0, 0, 0], port)).await;
