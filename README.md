@@ -60,5 +60,5 @@ This project was originally made to enable QR small QR codes.
 _Unfortunately, I cannot feasibly get a domain short enough for micro qr codes, and most device camera apps do not natively recognize micro qr codes._
 
 ```
-echo -n "https://cdyn.dev/V" | qrencode -t png -o qr.png
+echo -n "http://cdyn.dev/V" | qrencode -t png -l L -o qr.png
 ```

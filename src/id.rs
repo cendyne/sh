@@ -41,7 +41,7 @@ impl IncrementedString {
         let hash = hasher.finalize();
         let data = hash.as_bytes();
         IncrementedString {
-            position: 0,
+            position: 2, // Start at 3 (2 + 1) characters instead, reserve single characters for other use
             next_string: data
                 .iter()
                 .map(|b| {
@@ -59,7 +59,7 @@ impl Iterator for IncrementedString {
 
     // next() is the only required method
     fn next(&mut self) -> Option<Self::Item> {
-        // Increment our count. This is why we started at zero.
+        // Increment our count.
         self.position += 1;
 
         // Check to see if we've finished counting or not.
@@ -73,7 +73,6 @@ impl Iterator for IncrementedString {
 
 pub fn next_symbol_by_hash(settings: &JsonSettings, alphabet: &str) -> Result<String, String> {
     let increment_secret = INCREMENT_SECRET.get_or_try_init(load_token_increment_secret)?;
-    println!("Getting next symbol");
     settings
         .last_symbol
         .lock()
