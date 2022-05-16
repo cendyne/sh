@@ -62,3 +62,8 @@ _Unfortunately, I cannot feasibly get a domain short enough for micro qr codes, 
 ```
 echo -n "http://cdyn.dev/V" | qrencode -t png -l L -o qr.png
 ```
+
+-----
+
+This project has been replaced by https://github.com/cendyne/short-url, a cloudflare worker based solution
+The API is a little different but it works on similar principals.
